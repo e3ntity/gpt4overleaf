@@ -131,14 +131,16 @@ function setup(apiKey) {
 
   if (!currentAPIKey) return;
 
+  console.log("GPT4Overleaf: OpenAI API key set, enabling GPT4Overleaf features.");
+
   const openAI = new OpenAIAPI(currentAPIKey);
   cleanupHandlers.push(makeImproveTextHandler(openAI));
   cleanupHandlers.push(makeCompleteTextHandler(openAI));
 }
 
-setInterval(() => {
+setInterval(async () => {
   try {
-    chrome.storage.local.get("openAIAPIKey").then(({ openAIAPIKey }) => setup(openAIAPIKey));
+    await chrome.storage.local.get("openAIAPIKey").then(({ openAIAPIKey }) => setup(openAIAPIKey));
   } catch (error) {
     cleanup();
   }
