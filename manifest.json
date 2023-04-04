@@ -1,0 +1,12 @@
+{
+  "content_scripts": [
+    {
+      "js": ["scripts/jquery.js", "scripts/content.js"],
+      "matches": ["https://www.overleaf.com/project/*"]
+    }
+  ],
+  "description": "GPT-based Autocompletion for Overleaf",
+  "manifest_version": 3,
+  "name": "GPT4Overleaf",
+  "version": "1.0"
+}
