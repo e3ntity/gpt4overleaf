@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <script src="/scripts/jquery.js"></script>
+    <script src="/popup/popup.js"></script>
+    <link rel="stylesheet" href="/popup/popup.css" />
+  </head>
+  <body>
+    <h1 class="extension-title">GPT4Overleaf</h1>
+    <div id="controls" class="form-container">
+      <div class="control">
+        <div class="input"><span>CTRL</span><span>Space</span></div>
+        <div class="effect">Improve selected text.</div>
+      </div>
+      <div class="control">
+        <div class="input"><span>CTRL</span><span>Enter</span></div>
+        <div class="effect">Complete selected text.</div>
+      </div>
+    </div>
+    <div id="api-token-form" class="form-container">
+      <div class="api-token-text"><span>API Token is </span><span class="api-token-status">not set</span></div>
+      <input class="api-token-input" name="api-token" placeholder="OpenAI API Token" type="text" />
+      <button class="submit btn">Set API Token</button>
+      <button class="clear btn">Reset API Token</button>
+    </div>
+    <div id="message-box" class="message-box"></div>
+  </body>
+</html>

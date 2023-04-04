@@ -30,6 +30,19 @@ class OpenAIAPI {
     });
   }
 
+  async completeText(text) {
+    const data = {
+      max_tokens: 512,
+      prompt: `Complete the following text:\n\n${text}`,
+      n: 1,
+      temperature: 0.5,
+    };
+
+    const result = await this.query("completions", data);
+
+    return result[0].text;
+  }
+
   async improveText(text) {
     const data = {
       model: "code-davinci-edit-001",
@@ -46,31 +59,87 @@ class OpenAIAPI {
   }
 }
 
-(function () {
-  const apiKey = "";
-  const openAI = new OpenAIAPI(apiKey);
+function replaceSelectedText(replacementText, selection) {
+  const sel = selection === undefined ? window.getSelection() : selection;
 
-  function replaceSelectedText(replacementText) {
-    const sel = window.getSelection();
-    if (sel.rangeCount) {
-      const range = sel.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(document.createTextNode(replacementText));
-    }
+  if (sel.rangeCount) {
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(replacementText));
   }
+}
 
-  async function onKeyPress(event) {
+function makeImproveTextHandler(openAI) {
+  const handler = async (event) => {
     if (!event.ctrlKey || event.key !== " ") return;
 
-    const selectedText = window.getSelection().toString();
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
 
     if (!selectedText) return;
+
+    replaceSelectedText("...", selection);
 
     event.preventDefault();
     const editedText = await openAI.improveText(selectedText);
 
-    replaceSelectedText(editedText);
-  }
+    replaceSelectedText(editedText, selection);
+  };
 
-  document.addEventListener("keydown", onKeyPress, false);
-})();
+  const eventHandler = document.addEventListener("keydown", handler, false);
+  const removeEventHandler = () => document.removeEventListener("keydown", eventHandler);
+
+  return removeEventHandler;
+}
+
+function makeCompleteTextHandler(openAI) {
+  const handler = async (event) => {
+    if (!event.ctrlKey || event.key !== "Enter") return;
+
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    if (!selectedText) return;
+
+    replaceSelectedText("...", selection);
+
+    event.preventDefault();
+    const editedText = await openAI.completeText(selectedText);
+
+    replaceSelectedText(editedText, selection);
+  };
+
+  const eventHandler = document.addEventListener("keydown", handler, false);
+  const removeEventHandler = () => document.removeEventListener("keydown", eventHandler);
+
+  return removeEventHandler;
+}
+
+let currentAPIKey;
+let cleanupHandlers = [];
+
+function cleanup() {
+  cleanupHandlers.forEach((handler) => handler());
+  cleanupHandlers = [];
+}
+
+function setup(apiKey) {
+  if (currentAPIKey === apiKey) return;
+
+  cleanup();
+  currentAPIKey = apiKey;
+
+  if (!currentAPIKey) return;
+
+  const openAI = new OpenAIAPI(currentAPIKey);
+  cleanupHandlers.push(makeImproveTextHandler(openAI));
+  cleanupHandlers.push(makeCompleteTextHandler(openAI));
+}
+
+setInterval(() => {
+  try {
+    chrome.storage.local.get("openAIAPIKey").then(({ openAIAPIKey }) => setup(openAIAPIKey));
+  } catch (error) {
+    cleanup();
+  }
+}, 1000);

@@ -1,4 +1,8 @@
 {
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "popup/icon.png"
+  },
   "content_scripts": [
     {
       "js": ["scripts/jquery.js", "scripts/content.js"],
@@ -8,5 +12,6 @@
   "description": "GPT-based Autocompletion for Overleaf",
   "manifest_version": 3,
   "name": "GPT4Overleaf",
+  "permissions": ["storage"],
   "version": "1.0"
 }
