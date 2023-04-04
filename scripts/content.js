@@ -33,14 +33,14 @@ class OpenAIAPI {
   async completeText(text) {
     const data = {
       max_tokens: 512,
-      prompt: `Complete the following text:\n\n${text}`,
+      prompt: `Complete the following text, only outputting the completion and not repeating the original text:\n\n${text}`,
       n: 1,
       temperature: 0.5,
     };
 
     const result = await this.query("completions", data);
 
-    return result[0].text;
+    return text + result[0].text;
   }
 
   async improveText(text) {
@@ -69,16 +69,29 @@ function replaceSelectedText(replacementText, selection) {
   }
 }
 
+async function settingIsEnabled(setting) {
+  let result;
+  try {
+    result = await chrome.storage.local.get(setting);
+  } catch (error) {
+    return false;
+  }
+
+  console.log(result);
+
+  return result[setting];
+}
+
 function makeImproveTextHandler(openAI) {
   const handler = async (event) => {
     if (!event.ctrlKey || event.key !== " ") return;
+
+    if (!(await settingIsEnabled("textImprovement"))) return;
 
     const selection = window.getSelection();
     const selectedText = selection.toString();
 
     if (!selectedText) return;
-
-    replaceSelectedText("...", selection);
 
     event.preventDefault();
     const editedText = await openAI.improveText(selectedText);
@@ -93,26 +106,7 @@ function makeImproveTextHandler(openAI) {
 }
 
 function makeCompleteTextHandler(openAI) {
-  const handler = async (event) => {
-    if (!event.ctrlKey || event.key !== "Enter") return;
-
-    const selection = window.getSelection();
-    const selectedText = selection.toString();
-
-    if (!selectedText) return;
-
-    replaceSelectedText("...", selection);
-
-    event.preventDefault();
-    const editedText = await openAI.completeText(selectedText);
-
-    replaceSelectedText(editedText, selection);
-  };
-
-  const eventHandler = document.addEventListener("keydown", handler, false);
-  const removeEventHandler = () => document.removeEventListener("keydown", eventHandler);
-
-  return removeEventHandler;
+  return () => {};
 }
 
 let currentAPIKey;

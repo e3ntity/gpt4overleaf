@@ -1,8 +1,8 @@
 const apiKeyRegex = /sk-[a-zA-Z0-9]{48}/;
 
 const settings = [
-  { name: "textCompletion", key: "text-completion" },
-  { name: "textImprovement", key: "text-improvement" },
+  { key: "textCompletion", name: "text-completion" },
+  { key: "textImprovement", name: "text-improvement" },
 ];
 
 function addMessage(message) {
@@ -23,8 +23,8 @@ async function refreshStorage() {
   });
 
   chrome.storage.local.get(settings.map(({ key }) => key)).then((storage) => {
-    settings.forEach(({ key }) => {
-      $(`#settings-form input[name='${key}']:checkbox`).prop("checked", storage[key]);
+    settings.forEach(({ key, name }) => {
+      $(`#settings-form input[name='${name}']:checkbox`).prop("checked", storage[key]);
     });
   });
 }
@@ -72,7 +72,7 @@ async function handleAPITokenClear(event) {
   await refreshStorage();
 }
 
-function makeHandleSettingChange(name, key) {
+function makeHandleSettingChange(key) {
   return async (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -85,7 +85,7 @@ function makeHandleSettingChange(name, key) {
       await chrome.storage.local.set({ [key]: value });
     } catch (error) {
       console.log(error);
-      addErrorMessage(`Failed to set ${name} setting.`);
+      addErrorMessage(`Failed to set ${key} setting.`);
       return;
     }
 
@@ -97,8 +97,8 @@ $(document).ready(async function () {
   $("#api-token-form .submit").on("click", handleAPITokenSet);
   $("#api-token-form .clear").on("click", handleAPITokenClear);
 
-  settings.forEach(({ name, key }) =>
-    $(`#settings-form input[name='${key}']:checkbox`).on("change", makeHandleSettingChange(name, key))
+  settings.forEach(({ key, name }) =>
+    $(`#settings-form input[name='${name}']:checkbox`).on("change", makeHandleSettingChange(key))
   );
   await refreshStorage();
 });
