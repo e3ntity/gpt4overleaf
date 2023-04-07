@@ -18,5 +18,5 @@
   "manifest_version": 3,
   "name": "GPT4Overleaf",
   "permissions": ["storage"],
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
