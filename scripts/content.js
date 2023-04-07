@@ -33,7 +33,7 @@ class OpenAIAPI {
   async completeText(text) {
     const data = {
       max_tokens: 512,
-      prompt: `Complete the following text, only outputting the completion and not repeating the original text:\n\n${text}`,
+      prompt: text,
       n: 1,
       temperature: 0.5,
     };
@@ -106,7 +106,26 @@ function makeImproveTextHandler(openAI) {
 }
 
 function makeCompleteTextHandler(openAI) {
-  return () => {};
+  const handler = async (event) => {
+    if (!event.ctrlKey || event.key !== "Enter") return;
+
+    if (!(await settingIsEnabled("textCompletion"))) return;
+
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+
+    if (!selectedText) return;
+
+    event.preventDefault();
+    const editedText = await openAI.completeText(selectedText);
+
+    replaceSelectedText(editedText, selection);
+  };
+
+  const eventHandler = document.addEventListener("keydown", handler, false);
+  const removeEventHandler = () => document.removeEventListener("keydown", eventHandler);
+
+  return removeEventHandler;
 }
 
 let currentAPIKey;
